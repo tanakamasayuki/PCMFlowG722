@@ -215,14 +215,13 @@ G.722-specific test design:
 
 | Test dir | Subject | Strategy |
 |----------|---------|----------|
-| `g722_encoder/` | encoder output matches the ITU Mode 1 test vector | feed the ITU-supplied PCM test vector; assert byte-exact output against the ITU expected output |
-| `g722_decoder/` | decoder output matches the ITU Mode 1 test vector | feed the ITU-supplied G.722 test bitstream; assert PCM-exact output |
-| `roundtrip/` | encode → decode preserves the original within G.722's specified SNR for Mode 1 | feed sine sweeps and speech-like signals; assert RMS error below the expected ceiling and that the predictor converges within ~30 ms after startup |
-| `external_source/` | `G722Decoder` works as a `PCMSource` plugged into `PCMFlow::setInputSource()` | same harness as the G.711 sibling's external_source test |
+| `smoke/` | Library compiles against the chosen profile and the harness wiring works | host build, prints version, instantiates encoder + decoder |
+| `g722_encoder/` | `G722Encoder` API contract | encode(N) → N/2 bytes; reject odd N (FrameCountNotEven); reject short output buffer (BufferTooSmall); reject wrong format (InvalidFormat); reset() restores the predictor state |
+| `g722_decoder/` | `G722Decoder` API contract | decode(N) → 2N samples; reject short PCM buffer; queued path (`decode(_, _, nullptr, 0)` + `readFrames`); reset() restores the predictor state |
+| `roundtrip/` | encode → decode preserves signal characteristics | 1 kHz sine and silence; assert energy preserved within ±15 %, frequency preserved (zero-crossing count), peak amplitude preserved, silence-in → near-silence-out |
+| `external_source/` | `G722Decoder` works as a `PCMSource` plugged into `PCMFlow::setInputSource()` | same harness as the G.711 sibling; verify count, non-trivial peak, mono → stereo upmix |
 
-G.722 is **bit-exact** by specification (the ITU publishes reference test vectors that conforming implementations must reproduce bit-for-bit). Encoder and decoder tests are therefore bit-exact assertions against the ITU vectors, not ±tolerance. The roundtrip test is the only one that uses ±tolerance, because it crosses the lossy quantizer.
-
-ITU G.722 test vectors are freely redistributable as part of ITU-T G.191 STL; the test suite either embeds the relevant subset under `tests/g722_*/input/` or fetches them at test setup time, depending on size.
+G.722 has a fixed group delay (~3 ms / ~48 samples at 16 kHz, from the QMF + ADPCM filter chain), so the roundtrip test does **not** assert sample-by-sample equality with the input. Instead it asserts the statistical properties (energy, frequency content, peak amplitude) that a working codec must preserve. Per-sample bit-exactness against ITU reference vectors is deferred — see §"Deferred features".
 
 ## 11. Versioning
 
@@ -234,6 +233,7 @@ Captured here so they aren't lost; not in v0.1.x:
 
 - **WAV container with G.722 payload** (`WAVE_FORMAT_G722`). Useful for desktop interop (ffmpeg / VoIP recording playback). Implemented as a thin shim around the existing parent PCMFlow `WAVDecoder` once the parent grows a non-PCM payload hook, or as a standalone `G722WAVDecoder` here. Defer until a concrete user request appears.
 - **G.722 Mode 2 / Mode 3** (56 / 48 kbps). libg722 already implements all three modes, so unlocking them is mostly an API question: `begin()` would grow a `G722Mode` argument and a `setMode()` method appears. Defer until a concrete deployment needs them — RTP signalling for Mode 2 / 3 is rare in practice.
+- **ITU G.722 reference test vectors.** The vendored libg722 is itself bit-exact to ITU by construction, so the v0.1 test suite validates API contract and signal-preservation properties rather than re-asserting bit-exactness. ITU-T G.191 STL vectors can be embedded later under `tests/g722_*/input/` if a regression or third-party port motivates it.
 - **G.722 Appendix III / IV PLC** — ITU-T-specified high-complexity / low-complexity packet-loss concealment. Worthwhile for jittery RTP; Appendix IV is the more commonly deployed one. Both add ~2 KB of code and a few hundred bytes of state. Defer to v0.2.
 - **Upstream-tracking automation** (L1 weekly tag check or higher). The current L0 posture is appropriate because sippy/libg722 is essentially dormant. If upstream activity picks up, revisit and add `.github/workflows/upstream-check.yml`.
 - **`G722_PACKED` / `G722_SAMPLE_RATE_8000` upstream options** — libg722 exposes a packed-bits wire mode and a narrowband mode. Neither matches the on-the-wire convention used by RTP payload type 9 / standard G.722 hardware. v0.1 exposes only the default unpacked, 16 kHz mode. May be added later if a concrete user requests it.

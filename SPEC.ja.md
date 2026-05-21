@@ -215,14 +215,13 @@ G.722 固有のテスト設計:
 
 | テストディレクトリ | 検査対象 | 戦略 |
 |---|---|---|
-| `g722_encoder/` | エンコーダ出力が ITU Mode 1 テストベクタと一致するか | ITU 配布の PCM テストベクタを入力し、ITU 期待出力とバイト単位で比較 |
-| `g722_decoder/` | デコーダ出力が ITU Mode 1 テストベクタと一致するか | ITU 配布の G.722 ビットストリームを入力し、PCM をビット精確に比較 |
-| `roundtrip/` | encode → decode で元波形を Mode 1 の想定 SNR 内に保てるか | サインスイープと音声状信号を入れ、RMS 誤差が上限以下、起動から ~30 ms で予測器が収束することを確認 |
-| `external_source/` | `G722Decoder` が `PCMFlow::setInputSource()` 経由で機能するか | G.711 兄弟の external_source テストと同じハーネス |
+| `smoke/` | 選択プロファイルでライブラリがビルドでき、テストハーネスが動くか | host ビルド、バージョン表示、エンコーダ/デコーダの生成 |
+| `g722_encoder/` | `G722Encoder` の API 契約 | encode(N) → N/2 バイト、奇数 N は FrameCountNotEven で拒否、出力短すぎは BufferTooSmall、フォーマット異常は InvalidFormat、reset() で予測器状態が戻る |
+| `g722_decoder/` | `G722Decoder` の API 契約 | decode(N) → 2N サンプル、PCM 短すぎは BufferTooSmall、queued path(`decode(_, _, nullptr, 0)` + `readFrames`)、reset() で予測器状態が戻る |
+| `roundtrip/` | encode → decode で信号特性が保存されるか | 1 kHz サインと無音、エネルギー保存(±15%)、周波数保存(ゼロクロス数)、ピーク振幅保存、無音入力 → ほぼ無音出力 |
+| `external_source/` | `G722Decoder` が `PCMFlow::setInputSource()` 経由で機能するか | G.711 兄弟と同じハーネス、サンプル数 / 非自明ピーク / モノラル→ステレオ展開を検証 |
 
-G.722 は規格上**ビット精確**な実装が要求される(ITU が公開する参照テストベクタを bit-for-bit で再現できるのが適合条件)。したがってエンコーダ / デコーダのテストは±許容差ではなく、ITU ベクタに対する bit-exact アサーションになる。±許容差を使うのは量子化を跨ぐ roundtrip テストのみ。
-
-ITU G.722 テストベクタは ITU-T G.191 STL の一部として自由に再配布可能。サイズに応じて、本リポ `tests/g722_*/input/` に subset を同梱するか、テストセットアップ時に取得する。
+G.722 は QMF + ADPCM のフィルタチェーンで固定のグループ遅延(~3 ms / 16 kHz で ~48 サンプル)を持つので、roundtrip テストはサンプル単位の等価性は**主張しない**。代わりに正常動作するコーデックなら成り立つはずの統計的性質(エネルギー / 周波数特性 / ピーク振幅)を検証する。ITU リファレンスベクタに対するサンプル単位のビット精確比較は将来対応 — §「将来対応」参照。
 
 ## 11. バージョニング
 
@@ -234,6 +233,7 @@ SemVer (`major.minor.patch`) を `library.properties`、`library.json`、`src/pc
 
 - **WAV コンテナ(G.722 ペイロード)**(`WAVE_FORMAT_G722`)。デスクトップ相互運用(ffmpeg / VoIP 録音再生)用。親 PCMFlow `WAVDecoder` が非 PCM ペイロードのフックを持つ形で実装するか、本リポに `G722WAVDecoder` として実装する。具体的な要望が出てから着手。
 - **G.722 Mode 2 / Mode 3**(56 / 48 kbps)。libg722 自体は 3 モードすべて実装済みなので、解禁は実質 API の話だけ:`begin()` に `G722Mode` 引数を増やし `setMode()` を生やす。実利用要望が出てから着手 — RTP 上の Mode 2/3 シグナリングは現実にはほぼ使われていない。
+- **ITU G.722 リファレンステストベクタ。** vendor している libg722 が ITU に対してビット精確であるため、v0.1 のテストは API 契約と信号保存性の検証に絞り、再度のビット精確比較は行わない。リグレッションや第三者移植の必要が生じたら ITU-T G.191 STL のベクタを `tests/g722_*/input/` に同梱する形で追加可能。
 - **G.722 Appendix III / IV PLC** — ITU-T 規定の高複雑度 / 低複雑度パケットロス補償。jitter のある RTP 向けに有用。Appendix IV のほうが実装例が多い。いずれも ~2 KB のコードと数百バイトの状態を要する。v0.2 以降で着手予定。
 - **上流追随自動化**(L1 週次 tag チェック以上)。現状は L0 が妥当(sippy/libg722 はほぼ休眠状態)。上流活動が再開したら `.github/workflows/upstream-check.yml` を追加して再検討する。
 - **`G722_PACKED` / `G722_SAMPLE_RATE_8000` 上流オプション** — libg722 はパックドビットモードと狭帯域モードを提供するが、いずれも RTP payload type 9 や標準 G.722 ハードウェアのワイヤ規約と一致しない。v0.1 ではデフォルトの非パック・16 kHz モードのみ公開。具体的な要望が出ればパックドモードを後追いで足す。

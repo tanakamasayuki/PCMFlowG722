@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map for PCMFlowG722
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+G722Encoder	KEYWORD1
+G722Decoder	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+encode	KEYWORD2
+decode	KEYWORD2
+format	KEYWORD2
+isReady	KEYWORD2
+isEof	KEYWORD2
+lastError	KEYWORD2
+setPacketSink	KEYWORD2
+reset	KEYWORD2

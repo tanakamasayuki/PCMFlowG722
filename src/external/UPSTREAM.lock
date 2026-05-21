@@ -1,0 +1,19 @@
+# Provenance of the vendored G.722 codec snapshot in this directory.
+# This file is informational only — PCMFlowG722 adopts upstream-tracking
+# level L0 (no automatic tracking; see SPEC.md §9). Maintainers refresh
+# the snapshot manually via tools/sync_libg722.py.
+
+upstream = "https://github.com/sippy/libg722"
+commit   = "c608733ecf7409d54450688ddd782196451e5cd8"
+checked  = "2026-05-21"
+
+vendored_files = [
+  "g722.h",
+  "g722_codec.h",
+  "g722_common.h",
+  "g722_private.h",
+  "g722_encoder.h",
+  "g722_decoder.h",
+  "g722_encode.c",
+  "g722_decode.c",
+]

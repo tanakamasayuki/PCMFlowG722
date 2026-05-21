@@ -1,0 +1,26 @@
+{
+  "name": "PCMFlowG722",
+  "version": "0.1.0",
+  "description": "G.722 wideband (HD voice) codec add-on for PCMFlow, focused on real-time voice (VoIP, ESP-NOW transceivers). Exposes G722Encoder / G722Decoder via PCMFlow's PCMSink / PCMSource interfaces. Built on the sippy/libg722 public-domain core (Steve Underwood / CMU). 16 kHz wideband audio at 64 kbps; same packet budget as G.711, twice the bandwidth.",
+  "keywords": "audio, g722, wideband, hd-voice, codec, voip, esp-now, esp32, pcmflow",
+  "authors": [
+    {
+      "name": "TANAKA Masayuki",
+      "maintainer": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tanakamasayuki/PCMFlowG722.git"
+  },
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": "*",
+  "headers": "PCMFlowG722.h",
+  "dependencies": [
+    {
+      "name": "PCMFlow",
+      "owner": "tanakamasayuki"
+    }
+  ]
+}
