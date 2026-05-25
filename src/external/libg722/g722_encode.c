@@ -7,7 +7,7 @@
  *
  * All rights reserved.
  *
- *  Despite my general liking of the GPL, I place my own contributions 
+ *  Despite my general liking of the GPL, I place my own contributions
  *  to this code in the public domain for the benefit of all mankind -
  *  even the slimy ones who might try to proprietize my work and use it
  *  to my detriment.
@@ -31,6 +31,7 @@
 #include <inttypes.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "g722_private.h"
 #include "g722_common.h"
@@ -41,7 +42,7 @@ g722_encoder_new(int rate, int options)
 {
     G722_ENC_CTX *s;
 
-    if ((s = (G722_ENC_CTX *) malloc(sizeof(*s))) == NULL)
+    if ((s = (G722_ENC_CTX *)malloc(sizeof(*s))) == NULL)
         return NULL;
     memset(s, 0, sizeof(*s));
     if (rate == 48000)
@@ -52,7 +53,7 @@ g722_encoder_new(int rate, int options)
         s->bits_per_sample = 8;
     if ((options & G722_SAMPLE_RATE_8000))
         s->eight_k = TRUE;
-    if ((options & G722_PACKED)  &&  s->bits_per_sample != 8)
+    if ((options & G722_PACKED) && s->bits_per_sample != 8)
         s->packed = TRUE;
     else
         s->packed = FALSE;
@@ -72,57 +73,60 @@ int g722_encoder_destroy(G722_ENC_CTX *s)
 int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data[])
 {
     static const int q6[32] =
-    {
-           0,   35,   72,  110,  150,  190,  233,  276,
-         323,  370,  422,  473,  530,  587,  650,  714,
-         786,  858,  940, 1023, 1121, 1219, 1339, 1458,
-        1612, 1765, 1980, 2195, 2557, 2919,    0,    0
-    };
+        {
+            0, 35, 72, 110, 150, 190, 233, 276,
+            323, 370, 422, 473, 530, 587, 650, 714,
+            786, 858, 940, 1023, 1121, 1219, 1339, 1458,
+            1612, 1765, 1980, 2195, 2557, 2919, 0, 0};
     static const int iln[32] =
-    {
-         0, 63, 62, 31, 30, 29, 28, 27,
-        26, 25, 24, 23, 22, 21, 20, 19,
-        18, 17, 16, 15, 14, 13, 12, 11,
-        10,  9,  8,  7,  6,  5,  4,  0
-    };
+        {
+            0, 63, 62, 31, 30, 29, 28, 27,
+            26, 25, 24, 23, 22, 21, 20, 19,
+            18, 17, 16, 15, 14, 13, 12, 11,
+            10, 9, 8, 7, 6, 5, 4, 0};
     static const int ilp[32] =
-    {
-         0, 61, 60, 59, 58, 57, 56, 55,
-        54, 53, 52, 51, 50, 49, 48, 47,
-        46, 45, 44, 43, 42, 41, 40, 39,
-        38, 37, 36, 35, 34, 33, 32,  0
-    };
+        {
+            0, 61, 60, 59, 58, 57, 56, 55,
+            54, 53, 52, 51, 50, 49, 48, 47,
+            46, 45, 44, 43, 42, 41, 40, 39,
+            38, 37, 36, 35, 34, 33, 32, 0};
     static const int wl[8] =
-    {
-        -60, -30, 58, 172, 334, 538, 1198, 3042
-    };
+        {
+            -60, -30, 58, 172, 334, 538, 1198, 3042};
     static const int rl42[16] =
-    {
-        0, 7, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4, 3, 2, 1, 0
-    };
+        {
+            0, 7, 6, 5, 4, 3, 2, 1, 7, 6, 5, 4, 3, 2, 1, 0};
     static const int ilb[32] =
-    {
-        2048, 2093, 2139, 2186, 2233, 2282, 2332,
-        2383, 2435, 2489, 2543, 2599, 2656, 2714,
-        2774, 2834, 2896, 2960, 3025, 3091, 3158,
-        3228, 3298, 3371, 3444, 3520, 3597, 3676,
-        3756, 3838, 3922, 4008
-    };
+        {
+            2048, 2093, 2139, 2186, 2233, 2282, 2332,
+            2383, 2435, 2489, 2543, 2599, 2656, 2714,
+            2774, 2834, 2896, 2960, 3025, 3091, 3158,
+            3228, 3298, 3371, 3444, 3520, 3597, 3676,
+            3756, 3838, 3922, 4008};
     static const int qm4[16] =
-    {
-             0, -20456, -12896, -8968,
-         -6288,  -4240,  -2584, -1200,
-         20456,  12896,   8968,  6288,
-          4240,   2584,   1200,     0
-    };
+        {
+            0, -20456, -12896, -8968,
+            -6288, -4240, -2584, -1200,
+            20456, 12896, 8968, 6288,
+            4240, 2584, 1200, 0};
     static const int qm2[4] =
-    {
-        -7408,  -1616,   7408,   1616
-    };
+        {
+            -7408, -1616, 7408, 1616};
     static const int qmf_coeffs[12] =
-    {
-           3,  -11,   12,   32, -210,  951, 3876, -805,  362, -156,   53,  -11,
-    };
+        {
+            3,
+            -11,
+            12,
+            32,
+            -210,
+            951,
+            3876,
+            -805,
+            362,
+            -156,
+            53,
+            -11,
+        };
     static const int ihn[3] = {0, 1, 0};
     static const int ihp[3] = {0, 3, 2};
     static const int wh[3] = {0, -214, 798};
@@ -155,12 +159,12 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
 
     g722_bytes = 0;
     xhigh = 0;
-    for (j = 0;  j < len;  )
+    for (j = 0; j < len;)
     {
         if (s->itu_test_mode)
         {
             xlow =
-            xhigh = amp[j++] >> 1;
+                xhigh = amp[j++] >> 1;
         }
         else
         {
@@ -172,18 +176,18 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
             {
                 /* Apply the transmit QMF */
                 /* Shuffle the buffer down */
-                for (i = 0;  i < 22;  i++)
+                for (i = 0; i < 22; i++)
                     s->x[i] = s->x[i + 2];
                 s->x[22] = amp[j++];
                 s->x[23] = amp[j++];
-    
+
                 /* Discard every other QMF output */
                 sumeven = 0;
                 sumodd = 0;
-                for (i = 0;  i < 12;  i++)
+                for (i = 0; i < 12; i++)
                 {
-                    sumodd += s->x[2*i]*qmf_coeffs[i];
-                    sumeven += s->x[2*i + 1]*qmf_coeffs[11 - i];
+                    sumodd += s->x[2 * i] * qmf_coeffs[i];
+                    sumeven += s->x[2 * i + 1] * qmf_coeffs[11 - i];
                 }
                 xlow = (sumeven + sumodd) >> 14;
                 xhigh = (sumeven - sumodd) >> 14;
@@ -193,24 +197,24 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
         el = saturate(xlow - s->band[0].s);
 
         /* Block 1L, QUANTL */
-        wd = (el >= 0)  ?  el  :  -(el + 1);
+        wd = (el >= 0) ? el : -(el + 1);
 
-        for (i = 1;  i < 30;  i++)
+        for (i = 1; i < 30; i++)
         {
-            wd1 = (q6[i]*s->band[0].det) >> 12;
+            wd1 = (q6[i] * s->band[0].det) >> 12;
             if (wd < wd1)
                 break;
         }
-        ilow = (el < 0)  ?  iln[i]  :  ilp[i];
+        ilow = (el < 0) ? iln[i] : ilp[i];
 
         /* Block 2L, INVQAL */
         ril = ilow >> 2;
         wd2 = qm4[ril];
-        dlow = (s->band[0].det*wd2) >> 15;
+        dlow = (s->band[0].det * wd2) >> 15;
 
         /* Block 3L, LOGSCL */
         il4 = rl42[ril];
-        wd = (s->band[0].nb*127) >> 7;
+        wd = (s->band[0].nb * 127) >> 7;
         s->band[0].nb = wd + wl[il4];
         if (s->band[0].nb < 0)
             s->band[0].nb = 0;
@@ -220,11 +224,11 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
         /* Block 3L, SCALEL */
         wd1 = (s->band[0].nb >> 6) & 31;
         wd2 = 8 - (s->band[0].nb >> 11);
-        wd3 = (wd2 < 0)  ?  (ilb[wd1] << -wd2)  :  (ilb[wd1] >> wd2);
+        wd3 = (wd2 < 0) ? (ilb[wd1] << -wd2) : (ilb[wd1] >> wd2);
         s->band[0].det = wd3 << 2;
 
         block4(&s->band[0], dlow);
-        
+
         if (s->eight_k)
         {
             /* Just leave the high bits as zero */
@@ -236,18 +240,18 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
             eh = saturate(xhigh - s->band[1].s);
 
             /* Block 1H, QUANTH */
-            wd = (eh >= 0)  ?  eh  :  -(eh + 1);
-            wd1 = (564*s->band[1].det) >> 12;
-            mih = (wd >= wd1)  ?  2  :  1;
-            ihigh = (eh < 0)  ?  ihn[mih]  :  ihp[mih];
+            wd = (eh >= 0) ? eh : -(eh + 1);
+            wd1 = (564 * s->band[1].det) >> 12;
+            mih = (wd >= wd1) ? 2 : 1;
+            ihigh = (eh < 0) ? ihn[mih] : ihp[mih];
 
             /* Block 2H, INVQAH */
             wd2 = qm2[ihigh];
-            dhigh = (s->band[1].det*wd2) >> 15;
+            dhigh = (s->band[1].det * wd2) >> 15;
 
             /* Block 3H, LOGSCH */
             ih2 = rh2[ihigh];
-            wd = (s->band[1].nb*127) >> 7;
+            wd = (s->band[1].nb * 127) >> 7;
             s->band[1].nb = wd + wh[ih2];
             if (s->band[1].nb < 0)
                 s->band[1].nb = 0;
@@ -257,7 +261,7 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
             /* Block 3H, SCALEH */
             wd1 = (s->band[1].nb >> 6) & 31;
             wd2 = 10 - (s->band[1].nb >> 11);
-            wd3 = (wd2 < 0)  ?  (ilb[wd1] << -wd2)  :  (ilb[wd1] >> wd2);
+            wd3 = (wd2 < 0) ? (ilb[wd1] << -wd2) : (ilb[wd1] >> wd2);
             s->band[1].det = wd3 << 2;
 
             block4(&s->band[1], dhigh);
@@ -271,14 +275,14 @@ int g722_encode(G722_ENC_CTX *s, const int16_t amp[], int len, uint8_t g722_data
             s->out_bits += s->bits_per_sample;
             if (s->out_bits >= 8)
             {
-                g722_data[g722_bytes++] = (uint8_t) (s->out_buffer & 0xFF);
+                g722_data[g722_bytes++] = (uint8_t)(s->out_buffer & 0xFF);
                 s->out_bits -= 8;
                 s->out_buffer >>= 8;
             }
         }
         else
         {
-            g722_data[g722_bytes++] = (uint8_t) code;
+            g722_data[g722_bytes++] = (uint8_t)code;
         }
     }
     return g722_bytes;
