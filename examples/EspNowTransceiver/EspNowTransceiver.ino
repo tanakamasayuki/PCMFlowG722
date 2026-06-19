@@ -23,6 +23,7 @@
 #include <esp_now.h>
 #include <esp_wifi.h>
 #include <PCMFlow.h>
+#include <PCMFlowDeviceM5.h>
 #include <PCMFlowG722.h>
 
 // ---------------------------------------------------------------------------
@@ -31,7 +32,9 @@
 static constexpr uint32_t kRate = 16000;                 // G.722 fixed wideband rate
 static constexpr size_t kFrameSamples = 320;             // 20 ms @ 16 kHz
 static constexpr size_t kFrameBytes = kFrameSamples / 2; // G.722: 1 byte / 2 samples
+static constexpr size_t kMaxPlayFrames = (kRate * 80u) / 1000u;
 static constexpr uint8_t kWifiChannel = 1;               // both boards must agree
+using Player = M5SpeakerBufferedPlayer<kMaxPlayFrames>;
 
 static const uint8_t kBroadcastMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
@@ -41,6 +44,7 @@ static const uint8_t kBroadcastMac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 static G722Encoder g_enc;
 static G722Decoder g_dec;
 static PCMFlow g_audio;
+static Player g_player;
 
 // ---------------------------------------------------------------------------
 // ESP-NOW: receive callback
@@ -114,8 +118,7 @@ static void play_pending_audio()
         const size_t got = g_audio.readFrames(buf, kFrameSamples);
         if (got == 0)
             break;
-        while (!M5.Speaker.playRaw(buf, got, kRate, /*stereo=*/false))
-            delay(1);
+        g_player.writeFrames(buf, got);
     }
 }
 
@@ -148,6 +151,12 @@ void setup()
     g_audio.setOutputFormat({kRate, 1, 16});
     g_audio.setBufferFrames(2048);
     g_audio.setInputSource(g_dec);
+
+    if (!g_player.begin({kRate, 1, 16}, Player::stableProfile()))
+    {
+        Serial.println("player begin failed");
+        return;
+    }
 
     if (!espnow_setup())
     {
