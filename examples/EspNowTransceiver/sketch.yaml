@@ -9,6 +9,6 @@ profiles:
       - PCMFlow (0.2.1)
       - PCMFlowDevice (1.0.0)
       - M5Unified (0.2.17)
-      - M5GFX (0.2.23)
+      - M5GFX (0.2.24)
 
 default_profile: m5stack_core2
