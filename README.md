@@ -12,6 +12,8 @@ See [SPEC.md](SPEC.md) for the full specification.
 
 ---
 
+Start with the [example workflow](docs/GUIDE_EXAMPLES.md) and [individual example READMEs](examples/README.md) for setup, API sequence, verification and adaptation notes.
+
 ## What's inside
 
 | Class | Direction | Carrier | Interface |
@@ -25,8 +27,9 @@ WAV-container support (`WAVE_FORMAT_G722`) and G.722 Appendix III/IV PLC are int
 
 ---
 
-## PCMFlow codec family {#pcmflow-codec-family}
+<a id="pcmflow-codec-family"></a>
 
+## PCMFlow codec family
 PCMFlowG722 is one member of a family of optional codec add-ons for PCMFlow. Pick whichever matches your bandwidth / footprint / quality budget:
 
 | | [PCMFlowG711](https://github.com/tanakamasayuki/PCMFlowG711) | **PCMFlowG722** (this lib) | [PCMFlowOpus](https://github.com/tanakamasayuki/PCMFlowOpus) |

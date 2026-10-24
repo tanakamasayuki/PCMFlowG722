@@ -1,23 +1,5 @@
-// PCMFlowG722 example: EspNowTransceiver
-//
-// Half-duplex HD-voice transceiver over ESP-NOW for two (or more)
-// M5Stack Core2 boards. The same firmware acts as both sender and
-// receiver:
-//
-//   while button A is held:
-//       M5.Mic (16 kHz mono) -> G722Encoder -> ESP-NOW broadcast
-//   always:
-//       ESP-NOW recv -> G722Decoder -> PCMFlow -> M5.Speaker
-//
-// One 20 ms voice frame at 16 kHz produces 160 G.722 bytes (320 input
-// samples / 2). This fits well under ESP-NOW's 250-byte payload limit,
-// and is twice the audio bandwidth of the G.711 sibling example at the
-// same packet budget.
-//
-// Flash this binary on two boards (no pairing needed — ESP-NOW broadcast
-// reaches every peer in range on the same Wi-Fi channel). Hold A on one
-// board to talk; the other plays it back through the speaker.
-
+// en: Exchange encoded voice between ESP-NOW peers
+// ja: ESP-NOWの相手と符号化した音声を交換する
 #include <M5Unified.h>
 #include <WiFi.h>
 #include <esp_now.h>
@@ -99,6 +81,8 @@ static void capture_and_send_one_frame()
         delay(1);
 
     uint8_t packet[kFrameBytes];
+    // en: Encode into sufficiently large storage and validate the returned result before consuming output.
+    // ja: 十分な領域へ符号化し、結果を確認してから出力を使います。
     const size_t n = g_enc.encode(pcm, kFrameSamples, packet, sizeof(packet));
     if (n == 0)
         return;
@@ -111,13 +95,19 @@ static void capture_and_send_one_frame()
 // ---------------------------------------------------------------------------
 static void play_pending_audio()
 {
+    // en: Advance decoding/conversion, then consume only the available returned PCM frames.
+    // ja: 復号／変換を進め、得られたPCM フレームだけを取り出します。
     g_audio.pump();
     while (g_audio.availableFrames() >= kFrameSamples)
     {
         static int16_t buf[kFrameSamples];
+        // en: Use the actual returned frame count; bytes also depend on channel count and sample width.
+        // ja: 実際に返ったフレーム数を使います。Byte数にはチャンネル数とサンプル幅も関係します。
         const size_t got = g_audio.readFrames(buf, kFrameSamples);
         if (got == 0)
             break;
+        // en: Check the number accepted and retain any unconsumed tail; a frame is not a byte.
+        // ja: 受理量を確認し、残りを保持します。フレーム数とByte数は異なります。
         g_player.writeFrames(buf, got);
     }
 }
@@ -141,6 +131,8 @@ void setup()
     M5.Display.setCursor(4, 28);
     M5.Display.print("hold A: talk");
 
+    // en: Initialize this component after its prerequisites; inspect the returned status where provided.
+    // ja: 前提となる機器を準備してから初期化し、結果を返すAPIでは成否を確認します。
     if (!g_enc.begin({kRate, 1, 16}) ||
         !g_dec.begin({kRate, 1, 16}))
     {

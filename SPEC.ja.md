@@ -227,8 +227,9 @@ G.722 は QMF + ADPCM のフィルタチェーンで固定のグループ遅延(
 
 SemVer (`major.minor.patch`) を `library.properties`、`library.json`、`src/pcmflowg722_version.h` で同期管理。PCMFlow のバージョンとは**独立**。上流 sippy/libg722 のバージョンとも**独立**(上流側は `src/external/UPSTREAM.lock` で管理)。
 
-## 12. 将来対応 {#将来対応}
+<a id="将来対応"></a>
 
+## 12. 将来対応
 忘れないようここに集約。v0.1.x には含めない:
 
 - **WAV コンテナ(G.722 ペイロード)**(`WAVE_FORMAT_G722`)。デスクトップ相互運用(ffmpeg / VoIP 録音再生)用。親 PCMFlow `WAVDecoder` が非 PCM ペイロードのフックを持つ形で実装するか、本リポに `G722WAVDecoder` として実装する。具体的な要望が出てから着手。

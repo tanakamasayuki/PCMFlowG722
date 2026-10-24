@@ -12,6 +12,8 @@ PCMFlowG722 自体のコードは **MIT**。vendor している上流はパブ�
 
 ---
 
+初めて使う場合は[サンプル入門ガイド](docs/GUIDE_EXAMPLES.ja.md)と[各例の日英README](examples/README.ja.md)を参照してください。準備、APIの流れ、確認方法、組み込み時の注意を説明しています。
+
 ## 構成
 
 | クラス | 方向 | 担い手 | インタフェース |
@@ -25,8 +27,9 @@ WAV コンテナ(`WAVE_FORMAT_G722`)と G.722 Appendix III/IV PLC は v0.1 で�
 
 ---
 
-## PCMFlow コーデックファミリー {#pcmflow-コーデックファミリー}
+<a id="pcmflow-コーデックファミリー"></a>
 
+## PCMFlow コーデックファミリー
 PCMFlowG722 は PCMFlow のオプションコーデックアドオン群の 1 つ。帯域 / フットプリント / 音質のバランスで使い分ける:
 
 | | [PCMFlowG711](https://github.com/tanakamasayuki/PCMFlowG711) | **PCMFlowG722**(本ライブラリ) | [PCMFlowOpus](https://github.com/tanakamasayuki/PCMFlowOpus) |

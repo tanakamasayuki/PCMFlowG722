@@ -192,6 +192,8 @@ Reference standards (algorithm specification, not source code):
 
 - ITU-T Recommendation G.722 (09/2012 revision), "7 kHz audio-coding within 64 kbit/s".
 
+<a id="release-workflow"></a>
+
 ## 9. Release workflow
 
 PCMFlowG722 adopts **upstream-tracking level L0 — no automatic tracking**. sippy/libg722's G.722 core has been stable for years (Steve Underwood's substantive work concluded in 2005), so a weekly tag-watcher would almost never fire and would mostly be CI noise. Instead, the vendored snapshot is refreshed manually if and when a maintainer chooses to.
@@ -227,8 +229,9 @@ G.722 has a fixed group delay (~3 ms / ~48 samples at 16 kHz, from the QMF + ADP
 
 SemVer (`major.minor.patch`) maintained in `library.properties`, `library.json`, and `src/pcmflowg722_version.h`. **Independent of** the PCMFlow version. **Independent of** the upstream sippy/libg722 version (which is tracked in `src/external/UPSTREAM.lock`).
 
-## 12. Deferred features {#deferred-features}
+<a id="deferred-features"></a>
 
+## 12. Deferred features
 Captured here so they aren't lost; not in v0.1.x:
 
 - **WAV container with G.722 payload** (`WAVE_FORMAT_G722`). Useful for desktop interop (ffmpeg / VoIP recording playback). Implemented as a thin shim around the existing parent PCMFlow `WAVDecoder` once the parent grows a non-PCM payload hook, or as a standalone `G722WAVDecoder` here. Defer until a concrete user request appears.
